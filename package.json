@@ -10,7 +10,8 @@
     "typecheck": "vue-tsc --noEmit && tsc -p tsconfig.server.json --noEmit",
     "test": "node --import tsx --test tests/*.test.ts",
     "start": "node dist/server/server/index.js",
-    "preview:export": "vite build && node scripts/export-preview.mjs"
+    "preview:export": "vite build && node scripts/export-preview.mjs",
+    "build:pages": "vite build && node scripts/export-preview.mjs dist/pages/index.html"
   },
   "dependencies": {
     "@fastify/static": "^8.0.0",

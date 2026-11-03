@@ -45,6 +45,16 @@ DEMO_MODE=true npm start
 
 Open <http://localhost:8080> and select the **demo →** example under the manual input. Demo mode previews an example label and simulates saving without writing to Spoolman. Production defaults to `DEMO_MODE=false`.
 
+## GitHub Pages demo
+
+The `Pages preview` workflow builds a standalone interactive demo on each push to `main` and can also run manually. Pull requests only build/test the artifact; they do not deploy over the public site.
+
+Enable **Settings → Pages → Build and deployment → Source: GitHub Actions** once in the repository. After a successful workflow, the default URL is https://blondak.github.io/prusament2spoolman/ (unless the account has a custom Pages domain).
+
+The demo contains sample data only: no backend, no Spoolman connection, no real writes. QR/NFC controls are disabled there. Full operation remains in the self-hosted k3s application.
+
+Build locally with `npm run build:pages`; the complete page is `dist/pages/index.html`. The existing `npm run preview:export` still creates `preview.html` for opening locally. Only the static `dist/pages` directory is uploaded to Pages.
+
 ## Runtime configuration
 
 | Variable | Default | Purpose |
