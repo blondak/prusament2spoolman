@@ -1,0 +1,119 @@
+{{- if and (not .Values.demoMode) (not .Values.spoolman.url) -}}
+{{- fail "spoolman.url is required unless demoMode=true" -}}
+{{- end -}}
+{{- if and .Values.image.digest (not (regexMatch "^sha256:[a-f0-9]{64}$" .Values.image.digest)) -}}
+{{- fail "image.digest must be a sha256 digest (sha256: followed by 64 lowercase hexadecimal characters)" -}}
+{{- end -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "prusament.fullname" . }}
+  labels:
+    {{- include "prusament.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "prusament.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "prusament.selectorLabels" . | nindent 8 }}
+    spec:
+      automountServiceAccountToken: false
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: prusament
+          image: {{ if .Values.image.digest }}{{ printf "%s@%s" .Values.image.repository .Values.image.digest | quote }}{{ else }}{{ printf "%s:%s" .Values.image.repository .Values.image.tag | quote }}{{ end }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+            - name: REQUEST_TIMEOUT_MS
+              value: {{ .Values.requestTimeoutMs | quote }}
+            - name: DEMO_MODE
+              value: {{ .Values.demoMode | quote }}
+            - name: SPOOLMAN_URL
+              value: {{ .Values.spoolman.url | quote }}
+            - name: SPOOLMAN_PUBLIC_URL
+              value: {{ .Values.spoolman.publicUrl | quote }}
+            - name: SPOOLMAN_API_HEADER
+              value: {{ .Values.spoolman.apiHeader | quote }}
+            {{- if .Values.spoolman.apiKeySecret.name }}
+            - name: SPOOLMAN_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.spoolman.apiKeySecret.name | quote }}
+                  key: {{ .Values.spoolman.apiKeySecret.key | quote }}
+            {{- end }}
+            {{- if .Values.spoolman.customCA.existingSecret }}
+            - name: NODE_EXTRA_CA_CERTS
+              value: /etc/spoolman-ca/ca.crt
+            {{- end }}
+          readinessProbe:
+            httpGet:
+              path: /api/health/ready
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /api/health/live
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 20
+            timeoutSeconds: 5
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            {{- if .Values.spoolman.customCA.existingSecret }}
+            - name: spoolman-ca
+              mountPath: /etc/spoolman-ca
+              readOnly: true
+            {{- end }}
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 32Mi
+        {{- if .Values.spoolman.customCA.existingSecret }}
+        - name: spoolman-ca
+          secret:
+            secretName: {{ .Values.spoolman.customCA.existingSecret | quote }}
+            items:
+              - key: {{ .Values.spoolman.customCA.key | quote }}
+                path: ca.crt
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

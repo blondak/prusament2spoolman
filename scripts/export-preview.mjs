@@ -1,0 +1,8 @@
+import {readFileSync,writeFileSync,readdirSync} from 'node:fs';
+const dir='dist/client/assets';
+const js=readdirSync(dir).find(f=>f.endsWith('.js'));
+const css=readdirSync(dir).find(f=>f.endsWith('.css'));
+const data={source:'qr',prusamentId:'demo-001',brand:'Prusament',name:'PLA Galaxy Black',material:'PLA',colorHex:'343438',diameter:1.75,density:1.24,nominalWeight:1000,initialWeight:1024,spoolWeight:201,nozzleTemp:215,bedTemp:60,warnings:['Interaktivní ukázka: data jsou smyšlená a nic se nezapisuje do Spoolmanu.']};
+const bridge=`const demo=${JSON.stringify(data)};window.fetch=async(url,options)=>{let body=options?.body?JSON.parse(options.body):{};let value;if(url==='/api/status')value={connected:true,demo:true};else if(String(url).startsWith('/api/filaments')||String(url).startsWith('/api/spools'))value=[];else if(url==='/api/import/preview')value={data:demo,filaments:[],existing:[]};else if(url==='/api/import/commit')value={spool:{id:123,filament:{id:1,name:body.data?.name}},existing:false};else throw new Error('Tato ukázka nekomunikuje se serverem.');return new Response(JSON.stringify(value),{headers:{'Content-Type':'application/json'}});};`;
+const html=`<!doctype html><html lang="cs"><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Prusament – interaktivní ukázka</title><style>${readFileSync(`${dir}/${css}`,'utf8')}</style><div id="app"></div><script>${bridge}</script><script type="module">${readFileSync(`${dir}/${js}`,'utf8').replaceAll('</script','<\\/script')}</script></html>`;
+writeFileSync('preview.html',html);console.log('Created preview.html (standalone demo, no real writes).');

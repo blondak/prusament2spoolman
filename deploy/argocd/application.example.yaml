@@ -1,0 +1,40 @@
+# Example only: replace placeholders and review before applying.
+# Pin a real published digest after the GitHub Actions image build succeeds.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: prusament
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: git@github.com:blondak/prusament2spoolman.git
+    targetRevision: main
+    path: deploy/helm/prusament
+    helm:
+      valuesObject:
+        image:
+          digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+        spoolman:
+          url: http://spoolman.spoolman.svc.cluster.local:7912
+        ingress:
+          enabled: true
+          className: nginx
+          hosts:
+            - host: prusament.example.com
+              paths:
+                - path: /
+                  pathType: Prefix
+          tls:
+            - secretName: prusament-tls
+              hosts:
+                - prusament.example.com
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: prusament
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: false
+    syncOptions:
+      - CreateNamespace=true

@@ -1,0 +1,54 @@
+image:
+  repository: ghcr.io/blondak/prusament2spoolman
+  tag: "0.1.0"
+  # When set, the sha256 digest takes precedence over tag.
+  digest: ""
+  pullPolicy: IfNotPresent
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+demoMode: false
+requestTimeoutMs: 15000
+spoolman:
+  # Required unless demoMode is true; reachable from inside the cluster.
+  url: ""
+  # Optional address reachable from the user's browser.
+  publicUrl: ""
+  apiHeader: X-API-Key
+  # API key is read from this pre-existing Kubernetes Secret, never chart values.
+  apiKeySecret:
+    name: ""
+    key: api-key
+  # Optional pre-existing Secret containing a PEM CA bundle.
+  customCA:
+    existingSecret: ""
+    key: ca.crt
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: prusament.home.arpa
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  # - secretName: prusament-tls
+  #   hosts:
+  #     - prusament.home.arpa
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    memory: 512Mi
+nodeSelector: {}
+tolerations: []
+affinity: {}
