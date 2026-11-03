@@ -166,6 +166,22 @@ Register the source repository in Argo CD with a read-only GitHub SSH deploy key
 
 ## Phone access
 
+### Install on your home screen
+
+The self-hosted application includes a web app manifest, 192px and 512px icons,
+a maskable Android icon, and an Apple touch icon. Open the app over trusted HTTPS,
+then use your browser's **Install app / Add to Home Screen** action. On iPhone or
+iPad, use **Share → Add to Home Screen**. It opens in a standalone window and
+keeps the existing browser-language selection and saved language preference.
+
+Installation does not add offline import support: the application still needs
+access to its backend and Spoolman. No service worker caches API responses or
+queues writes. The standalone GitHub Pages demo does not advertise itself as an
+installable app. PNG icons are committed; `frontend/public/icons/spool.svg` is
+their vector source.
+
+### Network and device requirements
+
 Deploy this unauthenticated app only on your trusted home LAN or behind your VPN. Users who can access it can import into the configured Spoolman. Use HTTPS with a certificate trusted by your phone for camera/NFC access; ordinary remote HTTP is unsuitable for those browser features. NFC depends on browser/device support; QR scanning and manual entry provide alternatives. A phone connecting through a VPN still needs DNS resolution, network access to the app, and a trusted HTTPS certificate.
 
 Raw browser NFC access is limited to the NDEF records exposed by Web NFC. The application does not write to the physical tag. Unknown or incomplete labels produce a review warning or error; inspect imported weights and filament details before confirming. If a network error leaves the save result uncertain, check Spoolman before retrying.
