@@ -1,13 +1,15 @@
 import {readFileSync,writeFileSync,mkdirSync} from 'node:fs';
 import {dirname,resolve} from 'node:path';
+import {buildSync} from 'esbuild';
 import {installPreview} from './preview-runtime.mjs';
 const index = readFileSync('dist/client/index.html','utf8');
 const js = index.match(/<script[^>]*src="([^"]+\.js)"/)?.[1];
 const css = index.match(/<link[^>]*href="([^"]+\.css)"/)?.[1];
 if (!js || !css) throw new Error('Built frontend entrypoints are missing. Run vite build first.');
 const asset = path => readFileSync(resolve('dist/client', path.replace(/^\//,'')),'utf8');
-const bridge = `(${installPreview.toString()})(window);`;
-const html = `<!doctype html><html lang="cs"><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Prusament – interaktivní ukázka</title><style>${asset(css)}</style><div id="app"></div><script>${bridge}</script><script type="module">${asset(js).replaceAll('</script','<\\/script')}</script></html>`;
+const messages = buildSync({entryPoints:['shared/messages.ts'],bundle:true,write:false,format:'iife',globalName:'PrusamentMessages',minify:true}).outputFiles[0].text;
+const bridge = `${messages}\n(${installPreview.toString()})(window,PrusamentMessages.translateMessage,PrusamentMessages.resolveLocale);`;
+const html = `<!doctype html><html lang="en"><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Prusament – interactive demo</title><style>${asset(css)}</style><div id="app"></div><script>${bridge}</script><script type="module">${asset(js).replaceAll('</script','<\\/script')}</script></html>`;
 const output = process.argv[2] || 'preview.html';
 mkdirSync(dirname(output),{recursive:true});
 writeFileSync(output,html);

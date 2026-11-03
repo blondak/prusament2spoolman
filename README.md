@@ -1,8 +1,10 @@
 # Prusament → Spoolman
 
-**[Interaktivní preview na GitHub Pages](https://blondak.github.io/prusament2spoolman/)** — demo se vzorovými daty, bez zápisu do Spoolmanu. Dostupné po prvním úspěšném spuštění workflow `Pages preview`.
+**[Interactive preview on GitHub Pages](https://blondak.github.io/prusament2spoolman/)** — try the app with sample data, without writing to Spoolman.
 
-A mobile-friendly Czech interface for importing Prusament spools into your own Spoolman. Scan a QR label, read an NFC tag in a compatible browser, or paste a Prusament URL/ID. Review the imported details, choose an existing filament or create one, set the remaining filament weight, and confirm the import.
+A mobile-friendly English and Czech interface for importing Prusament spools into your own Spoolman. Scan a QR label, read an NFC tag in a compatible browser, or paste a Prusament URL/ID. Review the imported details, choose an existing filament or create one, set the remaining filament weight, and confirm the import.
+
+English is the default. Use the **EN / CZ** switch to change language without losing the current form. The browser remembers your choice in local storage (`prusament.locale`). The API localizes application errors and import warnings through `Accept-Language: en` or `cs`, with English as the fallback. Both languages are also available in the GitHub Pages demo.
 
 The backend talks to Spoolman; API credentials never need to be included in the browser build. Imports retain spool identifiers in Spoolman custom fields and check for an existing spool before creating another. There is no local database or persistent volume. A single application replica serializes imports; keep one replica to avoid concurrent duplicate creation across instances.
 
@@ -168,14 +170,13 @@ Deploy this unauthenticated app only on your trusted home LAN or behind your VPN
 
 Raw browser NFC access is limited to the NDEF records exposed by Web NFC. The application does not write to the physical tag. Unknown or incomplete labels produce a review warning or error; inspect imported weights and filament details before confirming. If a network error leaves the save result uncertain, check Spoolman before retrying.
 
-## Samostatná ukázka rozhraní
+## Standalone UI demo
 
-`npm run preview:export` vytvoří `preview.html`, kterou lze otevřít přímo v prohlížeči. Jde o interaktivní ukázku s pevnými testovacími daty; neprovádí síťové zápisy. Kamera/NFC vyžadují skutečné HTTPS nasazení.
+`npm run preview:export` creates `preview.html`, which can be opened directly in a browser. This interactive demo uses fixed sample data and performs no network writes. Camera and NFC access require the full application served over trusted HTTPS.
 
-## Stav ověření
+## Validation
 
-- Prošly testy QR/OpenPrintTag parseru, klienta Spoolmanu a HTTP API (demo import, validace, původ požadavků a readiness).
-- Prošly `npm run typecheck`, `npm test` a `npm run build` s deklarovanými závislostmi a aktuálním lockfile.
-- Helm lint a render prošly, včetně připnutí image na digest a odmítnutí neplatného digestu.
-- Docker build a GitHub Actions se dosud nespouštěly. Reálný Spoolman a fyzické QR/NFC zůstávají k ověření.
-- Tato relace blokuje síť a otevření portů. Lokální ověření API používá Fastify inject bez síťového listeneru.
+- Automated tests cover QR/OpenPrintTag parsing, the Spoolman client, HTTP API validation, request origins, readiness, language selection, translations, and the static demo. API tests use Fastify injection without opening a network listener.
+- Run `npm run typecheck`, `npm test`, and `npm run build` to check the application. Run `npm run build:pages` to validate the standalone demo build.
+- CI also validates Helm rendering, including image digest pinning and rejection of invalid digests, and publishes container images on supported events.
+- End-to-end verification against a real Spoolman instance and physical QR/NFC labels remains necessary for your deployment.

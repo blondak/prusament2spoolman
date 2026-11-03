@@ -1,13 +1,20 @@
-// This function is embedded in the exported HTML and must be self-contained.
-export function installPreview(target) {
+// This function is embedded in the exported HTML and receives shared translation helpers when embedded.
+export function installPreview(target, translateMessage, resolveLocale) {
   target.__PRUSAMENT_STATIC_DEMO__ = true;
   const data = {source:'qr',prusamentId:'demo-001',brand:'Prusament',name:'PLA Galaxy Black',material:'PLA',colorHex:'343438',diameter:1.75,density:1.24,nominalWeight:1000,initialWeight:1024,spoolWeight:201,nozzleTemp:215,bedTemp:60,warnings:['Veřejná ukázka: smyšlená data, žádné spojení se Spoolmanem.']};
   const filament = {id:1,name:data.name,material:data.material,color_hex:data.colorHex,diameter:1.75,vendor:{id:1,name:'Prusament'}};
-  const spool = {id:42,filament,comment:'Ukázková cívka'};
-  const response = (body, status = 200) => new Response(JSON.stringify(body), {status,headers:{'Content-Type':'application/json'}});
+  const spool = {id:42,filament,comment:'Demo spool'};
   target.fetch = async (input, options) => {
+    const headers = new Headers(options?.headers ?? (typeof Request !== 'undefined' && input instanceof Request ? input.headers : undefined));
+    const locale = resolveLocale(headers.get('Accept-Language') ?? undefined);
+    const response = (body, status = 200) => {
+      const localized = {...body};
+      if (typeof localized.message === 'string') localized.message = translateMessage(localized.message, locale);
+      if (body.data) localized.data = {...body.data,warnings:body.data.warnings.map(message => translateMessage(message, locale))};
+      return new Response(JSON.stringify(Array.isArray(body) ? body : localized), {status,headers:{'Content-Type':'application/json','Content-Language':locale,'Vary':'Accept-Language'}});
+    };
     const url = new URL(String(input), target.location.href);
-    if (url.origin !== new URL(target.location.href).origin) throw new Error('Ukázka nepovoluje externí požadavky.');
+    if (url.origin !== new URL(target.location.href).origin) throw new Error(translateMessage('Ukázka nepovoluje externí požadavky.', locale));
     const body = options?.body ? JSON.parse(options.body) : {};
     const query = url.searchParams.get('q')?.toLowerCase() ?? '';
     switch (url.pathname) {
