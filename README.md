@@ -1,5 +1,7 @@
 # Prusament → Spoolman
 
+**[Interaktivní preview na GitHub Pages](https://blondak.github.io/prusament2spoolman/)** — demo se vzorovými daty, bez zápisu do Spoolmanu. Dostupné po prvním úspěšném spuštění workflow `Pages preview`.
+
 A mobile-friendly Czech interface for importing Prusament spools into your own Spoolman. Scan a QR label, read an NFC tag in a compatible browser, or paste a Prusament URL/ID. Review the imported details, choose an existing filament or create one, set the remaining filament weight, and confirm the import.
 
 The backend talks to Spoolman; API credentials never need to be included in the browser build. Imports retain spool identifiers in Spoolman custom fields and check for an existing spool before creating another. There is no local database or persistent volume. A single application replica serializes imports; keep one replica to avoid concurrent duplicate creation across instances.
