@@ -4,7 +4,7 @@
 
 A mobile-friendly English and Czech interface for importing Prusament spools into your own Spoolman. Scan a QR label, read an NFC tag in a compatible browser, or paste a Prusament URL/ID. Review the imported details, choose an existing filament or create one, set the remaining filament weight, and confirm the import.
 
-English is the default. Use the **EN / CZ** switch to change language without losing the current form. The browser remembers your choice in local storage (`prusament.locale`). The API localizes application errors and import warnings through `Accept-Language: en` or `cs`, with English as the fallback. Both languages are also available in the GitHub Pages demo.
+On the first visit, the UI uses the first supported language in your browser preferences (English or Czech), falling back to English. Use the **EN / CZ** switch to change language without losing the current form. Your manual choice is saved in local storage (`prusament.locale`) and takes precedence on future visits. Automatic detection does not save a preference. The API localizes application errors and import warnings through `Accept-Language: en` or `cs`, with English as the fallback. Both languages are also available in the GitHub Pages demo.
 
 The backend talks to Spoolman; API credentials never need to be included in the browser build. Imports retain spool identifiers in Spoolman custom fields and check for an existing spool before creating another. There is no local database or persistent volume. A single application replica serializes imports; keep one replica to avoid concurrent duplicate creation across instances.
 

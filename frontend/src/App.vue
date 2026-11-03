@@ -2,16 +2,17 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { QrcodeStream } from 'vue-qrcode-reader';
 import { translateMessage } from '../../shared/messages';
-import { readLocale, saveLocale, translate, type MessageKey } from './i18n';
+import { readLocale, saveLocale, translate, type Locale, type MessageKey } from './i18n';
 import type { CommitInput, Filament, Preview, Spool } from '../../shared/types';
 
 type NdefRecord = { mediaType?: string; recordType: string; data?: DataView };
 type NdefReader = { scan: (options?: { signal?: AbortSignal }) => Promise<void>; onreading: ((event: { serialNumber?: string; message: { records: NdefRecord[] } }) => void) | null; onreadingerror: (() => void) | null };
 type NdefConstructor = new () => NdefReader;
 function storage(): Storage | undefined { try { return window.localStorage; } catch { return undefined; } }
-const locale = ref(readLocale(storage()));
+const locale = ref(readLocale(storage(), navigator.languages?.length ? navigator.languages : [navigator.language]));
+function selectLocale(value: Locale) { locale.value = value; saveLocale(value, storage()); }
 const t = (key: MessageKey) => translate(locale.value, key);
-watch(locale, value => { saveLocale(value, storage()); document.documentElement.lang = value; document.title = value === 'cs' ? 'Import cívek | Prusament → Spoolman' : 'Spool import | Prusament → Spoolman'; }, { immediate: true });
+watch(locale, value => { document.documentElement.lang = value; document.title = value === 'cs' ? 'Import cívek | Prusament → Spoolman' : 'Spool import | Prusament → Spoolman'; }, { immediate: true });
 const staticDemo = (window as Window & { __PRUSAMENT_STATIC_DEMO__?: boolean }).__PRUSAMENT_STATIC_DEMO__ === true;
 const phase = ref<'scan'|'review'|'success'>('scan');
 const mode = ref<'none'|'camera'|'nfc'>('none');
@@ -131,7 +132,7 @@ onBeforeUnmount(() => { stopReaders(); clearTimeout(searchTimer); clearTimeout(s
 
 <template>
  <div class="app-shell">
-  <header class="topbar"><a class="brand" href="/" @click.prevent="reset"><span class="brand-mark">P<span>↗</span></span><span>PRUSAMENT <i>→</i> SPOOLMAN<small>{{ t("RYCHLÝ IMPORT CÍVEK") }}</small></span></a><div class="header-controls"><span class="status" :class="{ online: status?.connected }"><span></span>{{ status?.demo ? 'DEMO' : status?.connected ? t("PŘIPOJENO") : status ? 'OFFLINE' : t("PŘIPOJUJI") }}</span><div class="language-switch" role="group" :aria-label="t('Jazyk')"><button type="button" :aria-pressed="locale === 'en'" @click="locale = 'en'">EN</button><button type="button" :aria-pressed="locale === 'cs'" @click="locale = 'cs'">CZ</button></div></div></header>
+  <header class="topbar"><a class="brand" href="/" @click.prevent="reset"><span class="brand-mark">P<span>↗</span></span><span>PRUSAMENT <i>→</i> SPOOLMAN<small>{{ t("RYCHLÝ IMPORT CÍVEK") }}</small></span></a><div class="header-controls"><span class="status" :class="{ online: status?.connected }"><span></span>{{ status?.demo ? 'DEMO' : status?.connected ? t("PŘIPOJENO") : status ? 'OFFLINE' : t("PŘIPOJUJI") }}</span><div class="language-switch" role="group" :aria-label="t('Jazyk')"><button type="button" :aria-pressed="locale === 'en'" @click="selectLocale('en')">EN</button><button type="button" :aria-pressed="locale === 'cs'" @click="selectLocale('cs')">CZ</button></div></div></header>
   <main>
    <div v-if="staticDemo" class="notice" role="note"><strong>{{ t("Interaktivní demo") }}</strong>{{ t(" — vzorová data bez připojení ke Spoolmanu. Kamera a NFC jsou dostupné v plné aplikaci.") }}</div>
    <div class="eyebrow"><span class="eyebrow-line"></span> {{ phase === 'scan' ? t("01 / NAČTENÍ ŠTÍTKU") : phase === 'review' ? t("02 / KONTROLA A ULOŽENÍ") : t("HOTOVO") }}</div>

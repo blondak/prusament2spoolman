@@ -234,8 +234,16 @@ export const dictionaries = {
 } as const;
 export type MessageKey = keyof typeof dictionaries.en;
 export function translate(locale: Locale, key: MessageKey): string { return dictionaries[locale][key] ?? dictionaries.en[key] ?? key; }
-export function readLocale(storage?: Pick<Storage, 'getItem'>): Locale {
- try { return storage?.getItem(LOCALE_KEY) === 'cs' ? 'cs' : 'en'; } catch { return 'en'; }
+export function readLocale(storage?: Pick<Storage, 'getItem'>, languages: readonly string[] = []): Locale {
+ try {
+  const saved = storage?.getItem(LOCALE_KEY);
+  if (saved === 'en' || saved === 'cs') return saved;
+ } catch { /* Browser preferences still work when storage is disabled. */ }
+ for (const language of languages) {
+  const base = language.trim().toLowerCase().split('-')[0];
+  if (base === 'en' || base === 'cs') return base;
+ }
+ return 'en';
 }
 export function saveLocale(locale: Locale, storage?: Pick<Storage, 'setItem'>): void {
  try { storage?.setItem(LOCALE_KEY, locale); } catch { /* Storage may be disabled. */ }
